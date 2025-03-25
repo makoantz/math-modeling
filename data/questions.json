@@ -1,0 +1,31 @@
+{
+  "questions": [
+    {
+      "question": "A mango is 215 grams. A papaya is 185 grams heavier than the mango while the grapefruit is 154 grams lighter than the papaya. How much does the papaya weigh? How much does the grapefruit weigh?",
+      "variables": {
+        "mango": 215,
+        "papaya": "mango + 185",
+        "grapefruit": "papaya - 154"
+      },
+      "model": {
+        "type": "comparison",
+        "parts": ["mango", "papaya", "grapefruit"],
+        "unknowns": ["papaya", "grapefruit"],
+        "relationships": [
+          {
+            "type": "difference",
+            "greater": "papaya",
+            "lesser": "mango",
+            "difference": 185
+          },
+          {
+            "type": "difference",
+            "greater": "papaya",
+            "lesser": "grapefruit",
+            "difference": 154
+          }
+        ]
+      }
+    }
+  ]
+}
