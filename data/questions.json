@@ -18,6 +18,87 @@
         "basket": "2*watermelon+3*orange+5*banana"
       },
       "unknowns": ["basket"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Tom has 46 while Jerry has 29. Tom bought more stamps and now has 20 more stamps than Jerry. How many stamps did Tom buy?",
+      "variables": {
+        "tom_initial": "46",
+        "jerry": "29",
+        "tom_final": "jerry+20",
+        "tom_bought": "tom_final-tom_initial"
+      },
+      "unknowns": ["tom_bought"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Tom has 46 while Jerry has 29. Tom bought 3 more stamps. How much more stamps does Tom have than Jerry?",
+      "variables": {
+        "tom_initial": "46",
+        "jerry": "29",
+        "tom_bought": "3",
+        "tom_final": "tom_initial+tom_bought",
+        "difference": "tom_final-jerry"
+      },
+      "unknowns": ["difference"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Jerry has 29 and Tom has 20 more stamps than Jerry. How many stamps does Tom have?",
+      "variables": {
+        "jerry": "29",
+        "difference": "20",
+        "tom": "jerry+difference"
+      },
+      "unknowns": ["tom"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Tom has 20 more stamps than Jerry. If Tom has 49 stamps, how many stamps does Jerry have?",
+      "variables": {
+        "tom": "49",
+        "difference": "20",
+        "jerry": "tom-difference"
+      },
+      "unknowns": ["jerry"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Jerry has 29 and Tom has 46. How many more stamps does Jerry have to buy so that he will have the same number of stamps as Tom?",
+      "variables": {
+        "jerry_initial": "29",
+        "tom": "46",
+        "jerry_needs": "tom-jerry_initial"
+      },
+      "unknowns": ["jerry_needs"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Tom has 46 and bought more stamps. He now has 20 more stamps than Jerry. If Jerry has 29 stamps, how many stamps did Tom buy?",
+      "variables": {
+        "tom_initial": "46",
+        "jerry": "29",
+        "tom_final": "jerry+20",
+        "tom_bought": "tom_final-tom_initial"
+      },
+      "unknowns": ["tom_bought"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Jerry has 29 stamps and has 20 less stamps now after Tom bought more. How many stamps did Tom have in the beginning if he bought 3 stamps?",
+      "variables": {
+        "jerry": "29",
+        "difference": "20",
+        "tom_final": "jerry+difference",
+        "tom_bought": "3",
+        "tom_initial": "tom_final-tom_bought"
+      },
+      "unknowns": ["tom_initial"]
+    },
+    {
+      "question": "Tom and Jerry likes to collect stamps. Tom has 49 stamps and Jerry has 20 less stamps than Tom. If Tom gives 10 stamps to Jerry, who has more stamps now?",
+      "variables": {
+        "tom_initial": "49",
+        "jerry_initial": "tom_initial-20",
+        "tom_gives": "10",
+        "tom_final": "tom_initial-tom_gives",
+        "jerry_final": "jerry_initial+tom_gives",
+        "final_difference": "tom_final-jerry_final"
+      },
+      "unknowns": ["final_difference"]
     }
   ]
 }
