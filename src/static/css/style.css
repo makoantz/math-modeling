@@ -105,59 +105,66 @@ h1 {
     white-space: pre-wrap; /* Preserve line breaks in error messages */
 }
 
-/* Bar Container needs relative positioning for absolute annotations */
+/* Bar Container needs relative positioning */
 .bar-container {
-    margin-bottom: 45px; /* Increased space for equation */
+    margin-bottom: 45px; /* Space below bar */
     position: relative;
-    min-height: 80px; /* Increased height for bar + annotations + equation */
-    padding-top: 45px; /* Increased space above bar for annotations (2 levels) */
+    /* Adjust min-height and padding-top based on annotation levels */
+    min-height: 90px; /* Give more guaranteed space */
+    padding-top: 55px; /* Generous space above bar for 2 levels of annotations */
+    width: 95%; /* Limit container width slightly to allow labels on right */
+    max-width: 800px; /* Optional: Set a max width for very wide screens */
+    margin-left: auto; /* Optional: Center the container */
+    margin-right: auto; /* Optional: Center the container */
 }
 
 .bar {
     display: flex;
-    height: 25px;
+    height: 25px; /* Keep bar height */
     border: 1px solid #333;
-    background-color: #eee; /* Fallback */
+    background-color: #eee;
     margin-bottom: 5px;
-    width: 100%; /* Make bar take full width of its container */
-    position: relative; /* For potential overlay effects if needed */
+    width: 100%; /* Bar fills its container width */
+    position: relative;
 }
 
 .bar-segment {
     height: 100%;
     box-sizing: border-box;
-    border-right: 1px solid rgba(51, 51, 51, 0.7); /* Slightly lighter border */
+    border-right: 1px solid rgba(51, 51, 51, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8em;
     color: white;
     overflow: hidden;
-    position: relative; /* Needed if adding pseudo-elements for hatching */
+    position: relative;
 }
 .bar-segment:last-child {
     border-right: none;
 }
 
-/* Leader Label Style */
+/* --- Leader Label Refinements --- */
 .bar-leader-label {
-    position: absolute; /* Position relative to bar-container */
-    left: 102%; /* Place slightly to the right of the bar (adjust as needed) */
-    top: 45px; /* Align vertically with the bar itself */
-    transform: translateY(-50%); /* Center vertically */
+    position: absolute;
+    /* Position relative to the bar-container */
+    left: 101%; /* Start slightly outside the container's 100% */
+    top: 55px; /* Match the padding-top to align with the bar's top */
+    transform: translateY(12.5px); /* Move down by half the bar height */
     font-size: 0.9em;
     white-space: nowrap;
-    padding-left: 15px; /* Space for leader line */
+    padding-left: 15px; /* Keep space for leader line */
+    line-height: 1; /* Prevent extra vertical space */
 }
-/* Leader line using pseudo-element */
+/* Leader line */
 .bar-leader-label::before {
     content: '';
     position: absolute;
-    left: 5px; /* Start line near text */
-    top: 50%;
-    width: 10px; /* Length of the leader */
+    left: 5px;
+    top: 50%; /* Center vertically relative to text line height */
+    width: 10px;
     height: 1px;
-    background-color: #333;
+    background-color: #555; /* Slightly lighter color */
     transform: translateY(-50%);
 }
 
@@ -170,8 +177,12 @@ h1 {
 .equation-text {
     font-size: 0.9em;
     color: #555;
-    margin-top: 8px; /* Space below bar/label */
+    margin-top: 8px;
     font-style: italic;
+    /* Position below the bar - relative to container */
+    position: absolute;
+    top: 85px; /* Adjust based on bar height and padding */
+    left: 0;
 }
 
 /* Hatching Styles */
@@ -188,7 +199,7 @@ h1 {
 .hatch-pattern-forward-slash { /* /// */
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(0,0,0,0.3), /* Make slightly darker */
+    rgba(0,0,0,0.3),
     rgba(0,0,0,0.3) 4px,
     transparent 4px,
     transparent 8px
@@ -198,53 +209,53 @@ h1 {
 .hatch-pattern-backward-slash { /* \\\ (Not used yet, but example)*/
   background-image: repeating-linear-gradient(
     -45deg,
-     rgba(0,0,0,0.3),
-     rgba(0,0,0,0.3) 4px,
-     transparent 4px,
-     transparent 8px
+    rgba(0,0,0,0.3),
+    rgba(0,0,0,0.3) 4px,
+    transparent 4px,
+    transparent 8px
   );
 }
 
 .hatch-pattern-cross { /* xxx */
- background-image:
+  background-image:
     repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 6px),
     repeating-linear-gradient(-45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 6px);
-  background-color: rgba(200, 200, 200, 0.1); /* Optional light background */
+  background-color: rgba(200, 200, 200, 0.1);
 }
 
-/* Annotation Styles */
+/* --- Annotation Styles Refinements --- */
 .annotation-line {
     position: absolute;
-    left: 0; /* Default, will be overridden by JS */
-    width: 0; /* Default, will be overridden by JS */
+    left: 0%; /* JS sets this */
+    width: 0%; /* JS sets this */
     height: 1px;
-    background-color: #333;
-    top: 0; /* Default, will be overridden by JS */
+    background-color: #555; /* Lighter color */
+    /* top is set by level */
 }
 .annotation-tick {
     position: absolute;
-    top: 0; /* Default */
     width: 1px;
-    height: 5px; /* Length of the tick */
-    background-color: #333;
-    left: 0; /* Default */
+    background-color: #555; /* Lighter color */
+    /* top, height, left are set by level/JS */
 }
 .annotation-label {
     position: absolute;
-    top: 0; /* Default */
-    left: 0; /* Default */
     transform: translateX(-50%); /* Center the label */
-    font-size: 0.8em;
+    font-size: 0.75em; /* Slightly smaller */
     color: #333;
     white-space: nowrap;
-    padding: 0 2px; /* Avoid overlap with ticks */
-    background-color: rgba(255, 255, 255, 0.8); /* Slight background for readability */
+    padding: 1px 3px; /* Small padding */
+    background-color: rgba(255, 255, 255, 0.85); /* Slightly more opaque */
+    border-radius: 2px;
+     /* top, left are set by level/JS */
 }
 
-/* Annotation Level Positioning */
-.annotation-level-1 { top: 20px; } /* Position level 1 annotations */
-.annotation-level-2 { top: 5px; }  /* Position level 2 annotations higher */
-.annotation-label.level-1 { top: 22px; } /* Label position relative to line */
-.annotation-label.level-2 { top: 7px; }
-.annotation-tick.level-1 { top: 20px; height: 5px;}
-.annotation-tick.level-2 { top: 5px; height: 5px;}
+/* Annotation Level Positioning - Increased Spacing */
+.annotation-level-1 { top: 25px; } /* Level 1 line position (lower) */
+.annotation-level-2 { top: 5px; }  /* Level 2 line position (higher) */
+
+.annotation-label.level-1 { top: 28px; } /* Label below level 1 line */
+.annotation-label.level-2 { top: 8px; }  /* Label below level 2 line */
+
+.annotation-tick.level-1 { top: 25px; height: 5px;} /* Tick goes down from line */
+.annotation-tick.level-2 { top: 5px; height: 5px;}  /* Tick goes down from line */
