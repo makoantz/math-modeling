@@ -1,4 +1,32 @@
 # README.md
+# 31 March 2025 - New Architecture
+Math Modeling Application
+   This project is an interactive application designed to solve math modeling problems and visualize them using bar representations. The application loads questions in JSON format, extracts variables and their relationships, solves the problems, and generates visual models to represent the solutions.
+
+Project Structure
+math-modeling/
+├── src/
+│   ├── main.py                             # CLI entry point
+│   ├── server.py                           # Web server entry point (Flask)
+│   ├── expression_parser.py                # Parses and evaluates mathematical expressions
+│   ├── backend_controller.py               # Core logic for web API
+│   ├── model/
+│   │   ├── __init__.py                     # Package initialization
+│   │   └── bar_model.py                    # Represents the mathematical model using bars
+│   ├── visualization/
+│   │   ├── __init__.py                     # Package initialization
+│   │   ├── bar_renderer.py                 # Visualizes the bar model (for CLI)
+│   │   └── visual_data_generator.py        # Generates visualization data (for web)
+│   └── static/                             # Frontend web files
+│       ├── index.html                      # Main HTML page
+│       ├── css/                            # Stylesheet directory
+│       │   └── style.css                   # Main stylesheet
+│       └── js/                             # JavaScript directory
+│           └── script.js                   # Frontend logic
+├── data/
+│   └── questions.json                      # JSON formatted questions
+└── README.md                               # Project documentation
+
 # 31 March 2025 Update
 
 Math Modeling Application

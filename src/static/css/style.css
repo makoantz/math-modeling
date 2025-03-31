@@ -1,0 +1,250 @@
+/* Basic Reset */
+body, h1, h2, p, div, select, label {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    background-color: #f4f7f6;
+    color: #333;
+    padding: 1em;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1em;
+    color: #2c3e50;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.panel {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #ecf0f1;
+}
+
+.left-panel {
+    flex: 1; /* Takes 1 part of available space */
+    min-width: 250px; /* Minimum width before wrapping */
+}
+
+.right-panel {
+    flex: 3; /* Takes 3 parts of available space */
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.left-panel h2, .right-panel h2 {
+    margin-bottom: 15px;
+    color: #34495e;
+    border-bottom: 2px solid #bdc3c7;
+    padding-bottom: 5px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.control-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.question-text {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e8f6fd;
+    border-left: 4px solid #3498db;
+    color: #2980b9;
+    min-height: 50px;
+    border-radius: 4px;
+}
+
+.visualization-area {
+    flex-grow: 1; /* Takes remaining vertical space */
+    background-color: #fff;
+    padding: 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    overflow-x: auto; /* Allow horizontal scrolling if bars are wide */
+    min-height: 300px;
+}
+
+.error-message {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #fbeae5;
+    color: #c0392b;
+    border: 1px solid #e74c3c;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: pre-wrap; /* Preserve line breaks in error messages */
+}
+
+/* Bar Container needs relative positioning for absolute annotations */
+.bar-container {
+    margin-bottom: 45px; /* Increased space for equation */
+    position: relative;
+    min-height: 80px; /* Increased height for bar + annotations + equation */
+    padding-top: 45px; /* Increased space above bar for annotations (2 levels) */
+}
+
+.bar {
+    display: flex;
+    height: 25px;
+    border: 1px solid #333;
+    background-color: #eee; /* Fallback */
+    margin-bottom: 5px;
+    width: 100%; /* Make bar take full width of its container */
+    position: relative; /* For potential overlay effects if needed */
+}
+
+.bar-segment {
+    height: 100%;
+    box-sizing: border-box;
+    border-right: 1px solid rgba(51, 51, 51, 0.7); /* Slightly lighter border */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    color: white;
+    overflow: hidden;
+    position: relative; /* Needed if adding pseudo-elements for hatching */
+}
+.bar-segment:last-child {
+    border-right: none;
+}
+
+/* Leader Label Style */
+.bar-leader-label {
+    position: absolute; /* Position relative to bar-container */
+    left: 102%; /* Place slightly to the right of the bar (adjust as needed) */
+    top: 45px; /* Align vertically with the bar itself */
+    transform: translateY(-50%); /* Center vertically */
+    font-size: 0.9em;
+    white-space: nowrap;
+    padding-left: 15px; /* Space for leader line */
+}
+/* Leader line using pseudo-element */
+.bar-leader-label::before {
+    content: '';
+    position: absolute;
+    left: 5px; /* Start line near text */
+    top: 50%;
+    width: 10px; /* Length of the leader */
+    height: 1px;
+    background-color: #333;
+    transform: translateY(-50%);
+}
+
+.bar-label {
+    font-size: 0.9em;
+    margin-left: 5px;
+    white-space: nowrap;
+}
+
+.equation-text {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 8px; /* Space below bar/label */
+    font-style: italic;
+}
+
+/* Hatching Styles */
+.hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0,0,0,0.2),
+    rgba(0,0,0,0.2) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+.hatch-pattern-forward-slash { /* /// */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0,0,0,0.3), /* Make slightly darker */
+    rgba(0,0,0,0.3) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.hatch-pattern-backward-slash { /* \\\ (Not used yet, but example)*/
+  background-image: repeating-linear-gradient(
+    -45deg,
+     rgba(0,0,0,0.3),
+     rgba(0,0,0,0.3) 4px,
+     transparent 4px,
+     transparent 8px
+  );
+}
+
+.hatch-pattern-cross { /* xxx */
+ background-image:
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 6px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 6px);
+  background-color: rgba(200, 200, 200, 0.1); /* Optional light background */
+}
+
+/* Annotation Styles */
+.annotation-line {
+    position: absolute;
+    left: 0; /* Default, will be overridden by JS */
+    width: 0; /* Default, will be overridden by JS */
+    height: 1px;
+    background-color: #333;
+    top: 0; /* Default, will be overridden by JS */
+}
+.annotation-tick {
+    position: absolute;
+    top: 0; /* Default */
+    width: 1px;
+    height: 5px; /* Length of the tick */
+    background-color: #333;
+    left: 0; /* Default */
+}
+.annotation-label {
+    position: absolute;
+    top: 0; /* Default */
+    left: 0; /* Default */
+    transform: translateX(-50%); /* Center the label */
+    font-size: 0.8em;
+    color: #333;
+    white-space: nowrap;
+    padding: 0 2px; /* Avoid overlap with ticks */
+    background-color: rgba(255, 255, 255, 0.8); /* Slight background for readability */
+}
+
+/* Annotation Level Positioning */
+.annotation-level-1 { top: 20px; } /* Position level 1 annotations */
+.annotation-level-2 { top: 5px; }  /* Position level 2 annotations higher */
+.annotation-label.level-1 { top: 22px; } /* Label position relative to line */
+.annotation-label.level-2 { top: 7px; }
+.annotation-tick.level-1 { top: 20px; height: 5px;}
+.annotation-tick.level-2 { top: 5px; height: 5px;}

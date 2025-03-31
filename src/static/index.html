@@ -1,0 +1,40 @@
+<!--src/static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Math Modeler</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Singapore Math Modeler</h1>
+
+    <div class="container">
+        <div class="panel left-panel">
+            <h2>Question Sets</h2>
+            <div class="control-group">
+                <label for="question-set-select">Select Set:</label>
+                <select id="question-set-select"></select>
+            </div>
+            <div class="control-group">
+                <label for="question-select">Select Question:</label>
+                <select id="question-select"></select>
+            </div>
+             <div id="error-display" class="error-message"></div>
+        </div>
+
+        <div class="panel right-panel">
+            <h2>Model Visualization</h2>
+            <div id="question-text-display" class="question-text">
+                Select a question to view the model.
+            </div>
+            <div id="visualization-area" class="visualization-area">
+                <!-- Visualization will be rendered here by script.js -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
