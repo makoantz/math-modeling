@@ -3,11 +3,21 @@
     {
       "question": "A mango is 215 grams. A papaya is 185 grams heavier than the mango while the grapefruit is 154 grams lighter than the papaya. How much does the papaya weigh? How much does the grapefruit weigh?",
       "variables": {
-        "mango": 215,
-        "papaya": ["mango", 185, "add"],
-        "grapefruit": ["mango", 154, "subtract"]
+        "mango": "215",
+        "papaya": "mango+185",
+        "grapefruit": "papaya-154"
       },
       "unknowns": ["papaya", "grapefruit"]
+    },
+    {
+      "question": "A watermelon weighs 1500 grams. An orange weighs 150 grams. A banana weighs half the weight of an orange. A fruit basket contains 2 watermelons, 3 oranges, and 5 bananas. How much does the fruit basket weigh in total?",
+      "variables": {
+        "watermelon": "1500",
+        "orange": "150",
+        "banana": "orange/2",
+        "basket": "2*watermelon+3*orange+5*banana"
+      },
+      "unknowns": ["basket"]
     }
   ]
 }
