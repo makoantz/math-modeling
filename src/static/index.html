@@ -11,8 +11,7 @@
     <h1>Singapore Math Modeler</h1>
 
     <div class="container">
-        <div class="panel left-panel">
-            <h2>Question Sets</h2>
+        <div class="top-controls">
             <div class="control-group">
                 <label for="question-set-select">Select Set:</label>
                 <select id="question-set-select"></select>
@@ -21,20 +20,30 @@
                 <label for="question-select">Select Question:</label>
                 <select id="question-select"></select>
             </div>
-             <div id="error-display" class="error-message"></div>
         </div>
-
-        <div class="panel right-panel">
+        
+        <div class="main-panel">
             <h2>Model Visualization</h2>
             <div id="question-text-display" class="question-text">
                 Select a question to view the model.
             </div>
             <div id="visualization-area" class="visualization-area">
                 <!-- Visualization will be rendered here by script.js -->
+                <div class="zoom-controls">
+                    <button id="zoom-in-btn" class="zoom-button">+</button>
+                    <button id="zoom-out-btn" class="zoom-button">−</button>
+                </div>
+                <div id="zoom-scale" class="zoom-scale">100%</div>
             </div>
+            <div class="controls-hint">
+                <span>Scroll to zoom, drag to pan</span>
+                <button id="reset-view-btn" class="reset-button">Reset View</button>
+            </div>
+            <div id="error-display" class="error-message"></div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
     <script src="/static/js/script.js"></script>
 </body>
 </html>

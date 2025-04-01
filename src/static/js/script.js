@@ -8,6 +8,13 @@ const questionSelect = document.getElementById('question-select');
 const questionTextDisplay = document.getElementById('question-text-display');
 const visualizationArea = document.getElementById('visualization-area');
 const errorDisplay = document.getElementById('error-display');
+const resetViewBtn = document.getElementById('reset-view-btn');
+const zoomInBtn = document.getElementById('zoom-in-btn');
+const zoomOutBtn = document.getElementById('zoom-out-btn');
+const zoomScaleDisplay = document.getElementById('zoom-scale');
+
+// Add global variable to track panzoom instance
+let currentPanzoomInstance = null;
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,10 +22,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners
     questionSetSelect.addEventListener('change', handleQuestionSetChange);
     questionSelect.addEventListener('change', handleQuestionSelectionChange);
+    resetViewBtn.addEventListener('click', resetPanzoomView);
+    
+    // Add zoom button event listeners
+    if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
 
     // Initial load
     fetchQuestionSets();
 });
+
+// Zoom control functions
+function zoomIn() {
+    if (currentPanzoomInstance) {
+        currentPanzoomInstance.zoomIn();
+        updateZoomDisplay();
+    }
+}
+
+function zoomOut() {
+    if (currentPanzoomInstance) {
+        currentPanzoomInstance.zoomOut();
+        updateZoomDisplay();
+    }
+}
+
+function updateZoomDisplay() {
+    if (currentPanzoomInstance && zoomScaleDisplay) {
+        const scale = Math.round(currentPanzoomInstance.getScale() * 100);
+        zoomScaleDisplay.textContent = `${scale}%`;
+    }
+}
+
+// Reset panzoom view to initial state
+function resetPanzoomView() {
+    if (currentPanzoomInstance) {
+        currentPanzoomInstance.reset();
+        updateZoomDisplay();
+    }
+}
 
 // --- Event Handlers ---
 function handleQuestionSetChange(event) {
@@ -117,15 +159,23 @@ async function loadQuestionSet(filename) {
 }
 
 async function solveAndVisualize(questionIndex) {
-    console.log(`Solving and visualizing question index: ${questionIndex}`);
+    console.log(`Solving question index ${questionIndex} and requesting image...`);
+    
+    // Destroy previous Panzoom instance if it exists
+    if (currentPanzoomInstance) {
+        console.log("Destroying previous Panzoom instance.");
+        currentPanzoomInstance.destroy();
+        currentPanzoomInstance = null;
+    }
+    
     if (questionIndex < 0 || questionIndex >= window.currentQuestions.length) {
         showError("Invalid question index.");
         return;
     }
     clearError();
-    clearVisualization();
+    clearVisualization(); // Clear previous image/message
     const questionData = window.currentQuestions[questionIndex];
-    questionTextDisplay.textContent = `Solving: ${questionData.question}`; // Show solving status
+    questionTextDisplay.textContent = `Solving: ${questionData.question}`;
 
     try {
         // Step 1: Solve the problem
@@ -142,31 +192,127 @@ async function solveAndVisualize(questionIndex) {
         const solveResult = await solveResponse.json();
         console.log("Solve successful:", solveResult);
 
-        // Step 2: Get visualization data
-        console.log("Calling /api/visualization-data");
-        const vizResponse = await fetch(`${API_BASE_URL}/api/visualization-data`, {
+        // Step 2: Display the visualization image
+        console.log("Requesting visualization image from /api/visualize");
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.alt = `Bar model visualization for question ${questionIndex + 1}`;
+        
+        // Add loading indicator
+        visualizationArea.innerHTML = '<div class="loading">Generating visualization...</div>';
+
+        // Request the image
+        const vizResponse = await fetch(`${API_BASE_URL}/api/visualize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ question_data: questionData, results: solveResult.results })
         });
+
         if (!vizResponse.ok) {
-             const errorData = await vizResponse.json().catch(() => ({ error: `Viz request failed! status: ${vizResponse.status}` }));
+            const errorData = await vizResponse.json().catch(() => ({ error: `Viz request failed! status: ${vizResponse.status}` }));
             throw new Error(`Visualization Error: ${errorData.error || `HTTP status ${vizResponse.status}`}`);
         }
-        const vizData = await vizResponse.json();
-        console.log("Visualization data received:", vizData);
 
-        // Step 3: Render the visualization
-        renderVisualization(vizData);
-        // Update question text display after successful processing
-        questionTextDisplay.textContent = vizData.question_text || questionData.question;
+        const imageBlob = await vizResponse.blob(); // Get image data as a Blob
+        const imageUrl = URL.createObjectURL(imageBlob); // Create a temporary URL for the Blob
+        img.src = imageUrl;
+        
+        // Clear loading indicator and add image
+        visualizationArea.innerHTML = '';
+        
+        // Recreate zoom controls (they were cleared by innerHTML)
+        if (visualizationArea) {
+            // Only recreate if not already in the HTML
+            if (!document.getElementById('zoom-in-btn')) {
+                const zoomControls = document.createElement('div');
+                zoomControls.className = 'zoom-controls';
+                zoomControls.innerHTML = `
+                    <button id="zoom-in-btn" class="zoom-button">+</button>
+                    <button id="zoom-out-btn" class="zoom-button">−</button>
+                `;
+                visualizationArea.appendChild(zoomControls);
+                
+                // Re-add event listeners
+                document.getElementById('zoom-in-btn').addEventListener('click', zoomIn);
+                document.getElementById('zoom-out-btn').addEventListener('click', zoomOut);
+            }
+            
+            // Recreate scale display if needed
+            if (!document.getElementById('zoom-scale')) {
+                const scaleDisplay = document.createElement('div');
+                scaleDisplay.id = 'zoom-scale';
+                scaleDisplay.className = 'zoom-scale';
+                scaleDisplay.textContent = '90%'; // Initial scale
+                visualizationArea.appendChild(scaleDisplay);
+            }
+        }
+        
+        visualizationArea.appendChild(img);
+        
+        // Initialize Panzoom when image is loaded
+        img.onload = () => {
+            URL.revokeObjectURL(imageUrl); // Free memory
+            
+            // Initialize Panzoom
+            try {
+                currentPanzoomInstance = Panzoom(img, {
+                    maxScale: 5,         // Allow zooming up to 5x
+                    minScale: 0.5,       // Allow zooming out to 0.5x
+                    contain: 'outside',  // Keep image within bounds mostly
+                    startScale: 0.9,     // Start slightly zoomed out to show full image
+                    cursor: 'grab',      // Show grab cursor
+                    
+                    // Adjust startY to move content down more (keep startX at 0 for horizontal centering)
+                    startX: 0,           // Center horizontally
+                    startY: 0,         // Positive = shift down (increased from 50 to 150)
+                    
+                    // Generous overflow to allow freedom of movement
+                    overflow: {
+                        top: 400,        // Increased to allow more movement upward
+                        left: 300,
+                        right: 300,
+                        bottom: 200
+                    },
+                    // Ensure panning is enabled
+                    panOnlyWhenZoomed: false,
+                    disablePan: false,
+                    animate: true
+                });
+                
+                // Add wheel zoom listener
+                visualizationArea.addEventListener('wheel', handleWheelZoom);
+                
+                // Update zoom display
+                updateZoomDisplay();
 
+                console.log("Panzoom initialized successfully");
+            } catch (panzoomError) {
+                console.error("Failed to initialize Panzoom:", panzoomError);
+            }
+        };
+        
+        img.onerror = () => { 
+            URL.revokeObjectURL(imageUrl); 
+            showError('Failed to load visualization image.'); 
+        };
+
+        // Update question text display
+        questionTextDisplay.textContent = questionData.question;
 
     } catch (error) {
         console.error('Error during solve/visualize process:', error);
         showError(`Processing Error: ${error.message}`);
-        // Reset question text if error occurs after starting
-         questionTextDisplay.textContent = questionData.question;
+        questionTextDisplay.textContent = questionData.question; // Reset text on error
+    }
+}
+
+// Handle wheel zoom with scale update
+function handleWheelZoom(event) {
+    if (currentPanzoomInstance) {
+        event.preventDefault();
+        currentPanzoomInstance.zoomWithWheel(event);
+        updateZoomDisplay();
     }
 }
 
@@ -185,147 +331,6 @@ function displayQuestion(index) {
     }
 }
 
-function renderVisualization(vizData) {
-    console.log("Rendering detailed visualization with SVG (v2)...");
-    visualizationArea.innerHTML = ''; // Clear previous content
-
-    if (!vizData || !vizData.bars || vizData.bars.length === 0) {
-        visualizationArea.innerHTML = '<p>No visualization data available.</p>';
-        return;
-    }
-
-    const maxValue = vizData.max_value > 0 ? vizData.max_value : 1;
-    const svgAnnotationHeight = 55; // Total height for SVG area
-    const barHeight = 25;
-    const barMarginTop = svgAnnotationHeight + 5; // Bar's top edge relative to container top
-    const equationBottomMargin = 5; // Space from bottom for equation
-    const equationHeightEstimate = 15; // Estimated height for equation text
-    // Calculate total height needed for the container
-    const totalBarContainerHeight = barMarginTop + barHeight + equationBottomMargin + equationHeightEstimate;
-
-    const svgNS = "http://www.w3.org/2000/svg";
-
-    vizData.bars.forEach(barData => {
-        const barContainer = document.createElement('div');
-        barContainer.className = 'bar-container';
-        barContainer.style.minHeight = `${totalBarContainerHeight}px`; // Ensure container has enough height
-
-
-        // --- Create SVG for Annotations ---
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute('class', 'annotation-svg');
-        svg.setAttribute('height', svgAnnotationHeight); // Set fixed height
-        svg.setAttribute('viewBox', `0 0 ${maxValue} ${svgAnnotationHeight}`);
-        svg.setAttribute('preserveAspectRatio', 'none');
-
-        // --- Draw Annotations in SVG ---
-        if (barData.annotations) {
-            barData.annotations.forEach(anno => {
-                const startX = anno.start_value;
-                const endX = anno.end_value;
-                const midX = startX + (endX - startX) / 2;
-                const level = anno.level || 1;
-
-                // Y positions within SVG (0=top)
-                const lineY = (level === 1) ? 35 : 15; // Level 1 lower, Level 2 higher
-                const textY = lineY - 2; // Position text baseline slightly ABOVE the line
-                const tickStartY = lineY;
-                const tickEndY = lineY + 4; // Tick length (downwards)
-
-                // Horizontal Line
-                const hLine = document.createElementNS(svgNS, "line");
-                hLine.setAttribute('x1', startX);
-                hLine.setAttribute('y1', lineY);
-                hLine.setAttribute('x2', endX);
-                hLine.setAttribute('y2', lineY);
-                // No specific class needed if styling all lines the same
-                svg.appendChild(hLine);
-
-                // Start Tick
-                const tickStart = document.createElementNS(svgNS, "line");
-                tickStart.setAttribute('x1', startX);
-                tickStart.setAttribute('y1', tickStartY);
-                tickStart.setAttribute('x2', startX);
-                tickStart.setAttribute('y2', tickEndY);
-                svg.appendChild(tickStart);
-
-                // End Tick
-                const tickEnd = document.createElementNS(svgNS, "line");
-                tickEnd.setAttribute('x1', endX);
-                tickEnd.setAttribute('y1', tickStartY);
-                tickEnd.setAttribute('x2', endX);
-                tickEnd.setAttribute('y2', tickEndY);
-                svg.appendChild(tickEnd);
-
-                // Label Text
-                const label = document.createElementNS(svgNS, "text");
-                label.setAttribute('x', midX);
-                label.setAttribute('y', textY); // Use adjusted Y
-                // No specific class needed if styling all text the same
-                label.textContent = anno.label;
-                svg.appendChild(label);
-            });
-        }
-
-        // --- Create the Bar Element ---
-        const barElement = document.createElement('div');
-        barElement.className = 'bar';
-        barElement.style.height = `${barHeight}px`;
-        barElement.style.top = `${barMarginTop}px`; // Position below SVG using 'top'
-
-        // Add segments (Logic remains similar)
-        barData.segments.forEach(segment => {
-            const segmentElement = document.createElement('div');
-            segmentElement.className = 'bar-segment';
-            const segmentWidthPercent = (segment.value / maxValue) * 100;
-            segmentElement.style.width = `max(0%, ${segmentWidthPercent}%)`;
-            segmentElement.style.backgroundColor = segment.color || '#cccccc';
-            if (segment.hatch) {
-                const hatchClass = segment.hatch_pattern === "xxx" ? 'hatch-pattern-cross' : 'hatch-pattern-forward-slash';
-                segmentElement.classList.add(hatchClass);
-                if (segment.color === 'transparent') {
-                    segmentElement.style.backgroundColor = 'transparent';
-                }
-            }
-            barElement.appendChild(segmentElement);
-        });
-
-
-        // --- Create Leader Label ---
-        const leaderLabelElement = document.createElement('span');
-        leaderLabelElement.className = 'bar-leader-label';
-        leaderLabelElement.textContent = `${barData.name}: ${barData.total_value.toFixed(1)}`;
-        leaderLabelElement.style.top = `${barMarginTop}px`; // Align top with bar's top
-        leaderLabelElement.style.transform = `translateY(${barHeight / 2}px)`; // Center vertically on bar
-        const barWidthPercent = (barData.total_value / maxValue) * 100;
-        // Ensure label doesn't overlap bar if bar is very wide
-        leaderLabelElement.style.left = `calc(min(100%, ${barWidthPercent}%) + 5px)`;
-
-
-        // --- Create Equation Text ---
-        let equationElement = null;
-        if (barData.equation) {
-            equationElement = document.createElement('div');
-            equationElement.className = 'equation-text';
-            // CSS handles positioning (absolute bottom)
-            equationElement.textContent = barData.equation;
-        }
-
-
-        // --- Assemble the container ---
-        barContainer.appendChild(svg);
-        barContainer.appendChild(barElement);
-        barContainer.appendChild(leaderLabelElement);
-        if (equationElement) {
-            barContainer.appendChild(equationElement);
-        }
-
-        visualizationArea.appendChild(barContainer);
-    });
-
-    console.log("SVG rendering update complete.");
-}
-
 function showError(message) {
     errorDisplay.textContent = message;
     errorDisplay.style.display = 'block'; // Make it visible
@@ -337,5 +342,14 @@ function clearError() {
 }
 
 function clearVisualization() {
-     visualizationArea.innerHTML = ''; // Clear the drawing area
+    visualizationArea.innerHTML = ''; // Clear the drawing area
+    
+    // Destroy panzoom instance if it exists
+    if (currentPanzoomInstance) {
+        console.log("Clearing visualization, destroying Panzoom instance.");
+        // Remove wheel event listener to prevent memory leaks
+        visualizationArea.removeEventListener('wheel', handleWheelZoom);
+        currentPanzoomInstance.destroy();
+        currentPanzoomInstance = null;
+    }
 }
