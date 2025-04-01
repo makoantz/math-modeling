@@ -105,29 +105,30 @@ h1 {
     white-space: pre-wrap; /* Preserve line breaks in error messages */
 }
 
-/* Bar Container needs relative positioning */
+/* --- ADJUST Bar Container --- */
 .bar-container {
-    margin-bottom: 45px; /* Space below bar */
-    position: relative;
-    /* Adjust min-height and padding-top based on annotation levels */
-    min-height: 90px; /* Give more guaranteed space */
-    padding-top: 55px; /* Generous space above bar for 2 levels of annotations */
-    width: 95%; /* Limit container width slightly to allow labels on right */
-    max-width: 800px; /* Optional: Set a max width for very wide screens */
-    margin-left: auto; /* Optional: Center the container */
-    margin-right: auto; /* Optional: Center the container */
+    margin-bottom: 15px;
+    position: relative; /* Crucial for absolute children */
+    /* min-height is set dynamically by JS */
+    width: 95%;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px dashed #eee; /* TEMPORARY: Visualize container bounds */
 }
 
+/* --- Bar Positioning --- */
 .bar {
     display: flex;
-    height: 25px; /* Keep bar height */
     border: 1px solid #333;
-    background-color: #eee;
-    margin-bottom: 5px;
-    width: 100%; /* Bar fills its container width */
-    position: relative;
+    background-color: #eee; /* Fallback */
+    width: 100%; /* Fill container width */
+    position: absolute; /* Position relative to container */
+    left: 0;
+    /* height and top set by JS */
 }
 
+/* Bar Segment Styles */
 .bar-segment {
     height: 100%;
     box-sizing: border-box;
@@ -140,31 +141,26 @@ h1 {
     overflow: hidden;
     position: relative;
 }
-.bar-segment:last-child {
-    border-right: none;
-}
+.bar-segment:last-child { border-right: none; }
 
-/* --- Leader Label Refinements --- */
+/* --- Leader Label positioning --- */
 .bar-leader-label {
     position: absolute;
-    /* Position relative to the bar-container */
-    left: 101%; /* Start slightly outside the container's 100% */
-    top: 55px; /* Match the padding-top to align with the bar's top */
-    transform: translateY(12.5px); /* Move down by half the bar height */
     font-size: 0.9em;
     white-space: nowrap;
-    padding-left: 15px; /* Keep space for leader line */
-    line-height: 1; /* Prevent extra vertical space */
+    padding-left: 15px;
+    line-height: 1;
+    color: #333; /* Ensure color is set */
+    /* left, top, transform set by JS */
 }
-/* Leader line */
 .bar-leader-label::before {
     content: '';
     position: absolute;
     left: 5px;
-    top: 50%; /* Center vertically relative to text line height */
+    top: 50%;
     width: 10px;
     height: 1px;
-    background-color: #555; /* Slightly lighter color */
+    background-color: #555;
     transform: translateY(-50%);
 }
 
@@ -174,15 +170,16 @@ h1 {
     white-space: nowrap;
 }
 
+/* --- Equation Text positioning --- */
 .equation-text {
     font-size: 0.9em;
     color: #555;
-    margin-top: 8px;
     font-style: italic;
-    /* Position below the bar - relative to container */
-    position: absolute;
-    top: 85px; /* Adjust based on bar height and padding */
-    left: 0;
+    position: absolute; /* Position relative to container */
+    bottom: 5px; /* Position near the bottom */
+    left: 5px; /* Add some padding */
+    width: calc(100% - 10px); /* Prevent overflow */
+    text-align: left;
 }
 
 /* Hatching Styles */
@@ -223,39 +220,30 @@ h1 {
   background-color: rgba(200, 200, 200, 0.1);
 }
 
-/* --- Annotation Styles Refinements --- */
-.annotation-line {
-    position: absolute;
-    left: 0%; /* JS sets this */
-    width: 0%; /* JS sets this */
-    height: 1px;
-    background-color: #555; /* Lighter color */
-    /* top is set by level */
-}
-.annotation-tick {
-    position: absolute;
-    width: 1px;
-    background-color: #555; /* Lighter color */
-    /* top, height, left are set by level/JS */
-}
-.annotation-label {
-    position: absolute;
-    transform: translateX(-50%); /* Center the label */
-    font-size: 0.75em; /* Slightly smaller */
-    color: #333;
-    white-space: nowrap;
-    padding: 1px 3px; /* Small padding */
-    background-color: rgba(255, 255, 255, 0.85); /* Slightly more opaque */
-    border-radius: 2px;
-     /* top, left are set by level/JS */
+/* --- SVG Styles --- */
+.annotation-svg {
+    position: absolute; /* Overlay within the container */
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* height is set by JS */
+    overflow: visible;
 }
 
-/* Annotation Level Positioning - Increased Spacing */
-.annotation-level-1 { top: 25px; } /* Level 1 line position (lower) */
-.annotation-level-2 { top: 5px; }  /* Level 2 line position (higher) */
+/* Style ALL lines within the SVG */
+.annotation-svg line {
+    stroke: #555; /* Use a consistent, slightly lighter color */
+    stroke-width: 0.8; /* Make lines thinner */
+    vector-effect: non-scaling-stroke;
+}
 
-.annotation-label.level-1 { top: 28px; } /* Label below level 1 line */
-.annotation-label.level-2 { top: 8px; }  /* Label below level 2 line */
-
-.annotation-tick.level-1 { top: 25px; height: 5px;} /* Tick goes down from line */
-.annotation-tick.level-2 { top: 5px; height: 5px;}  /* Tick goes down from line */
+/* Style ALL text within the SVG */
+.annotation-svg text {
+    font-family: sans-serif;
+    font-size: 8px; /* Make text smaller */
+    fill: #333;
+    text-anchor: middle;
+    /* dominant-baseline determines vertical alignment point */
+    /* Use 'text-after-edge' to place text ABOVE the line */
+    dominant-baseline: text-after-edge;
+}

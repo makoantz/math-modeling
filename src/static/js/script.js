@@ -186,7 +186,7 @@ function displayQuestion(index) {
 }
 
 function renderVisualization(vizData) {
-    console.log("Rendering detailed visualization...");
+    console.log("Rendering detailed visualization with SVG (v2)...");
     visualizationArea.innerHTML = ''; // Clear previous content
 
     if (!vizData || !vizData.bars || vizData.bars.length === 0) {
@@ -194,110 +194,126 @@ function renderVisualization(vizData) {
         return;
     }
 
-    const maxValue = vizData.max_value > 0 ? vizData.max_value : 1; // Avoid division by zero, ensure positive
+    const maxValue = vizData.max_value > 0 ? vizData.max_value : 1;
+    const svgAnnotationHeight = 55; // Total height for SVG area
+    const barHeight = 25;
+    const barMarginTop = svgAnnotationHeight + 5; // Bar's top edge relative to container top
+    const equationBottomMargin = 5; // Space from bottom for equation
+    const equationHeightEstimate = 15; // Estimated height for equation text
+    // Calculate total height needed for the container
+    const totalBarContainerHeight = barMarginTop + barHeight + equationBottomMargin + equationHeightEstimate;
 
-    // Determine a suitable width scaling factor if bars exceed container?
-    // For now, assume bars fit, use percentages.
+    const svgNS = "http://www.w3.org/2000/svg";
 
-    // Render bars (data is already bottom-up if backend reversed it)
     vizData.bars.forEach(barData => {
         const barContainer = document.createElement('div');
         barContainer.className = 'bar-container';
-
-        // Create the main bar div (flex container for segments)
-        const barElement = document.createElement('div');
-        barElement.className = 'bar';
-
-        let currentOffsetPercent = 0;
-        // Add segments
-        barData.segments.forEach(segment => {
-            const segmentElement = document.createElement('div');
-            segmentElement.className = 'bar-segment';
-
-            // Calculate width based on segment's value relative to the *maximum value across all bars*
-            // This ensures bars are scaled relative to each other.
-            const segmentWidthPercent = (segment.value / maxValue) * 100;
-            segmentElement.style.width = `${segmentWidthPercent}%`;
-            segmentElement.style.backgroundColor = segment.color || '#cccccc';
-
-            // Apply hatching based on pattern string or boolean
-            if (segment.hatch) {
-                if (segment.hatch_pattern === "///") {
-                    segmentElement.classList.add('hatch-pattern-forward-slash');
-                } else if (segment.hatch_pattern === "xxx") {
-                    segmentElement.classList.add('hatch-pattern-cross');
-                } else { // Default hatching if only true
-                     segmentElement.classList.add('hatch-pattern-forward-slash');
-                }
-                 // Ensure background color is somewhat visible under hatching if not transparent
-                 if (segment.color !== 'transparent') {
-                    // You might need to adjust the hatch CSS to use RGBA or have a background set
-                 } else {
-                    segmentElement.style.backgroundColor = 'transparent'; // Ensure transparent background for hatch only
-                 }
-            }
-
-            barElement.appendChild(segmentElement);
-            currentOffsetPercent += segmentWidthPercent; // Track offset for annotations
-        });
-
-        // Add bar leader label (name and total value)
-        const leaderLabelElement = document.createElement('span');
-        leaderLabelElement.className = 'bar-leader-label';
-        leaderLabelElement.textContent = `${barData.name}: ${barData.total_value.toFixed(1)}`;
-        // Adjust leader line start based on bar width percentage
-        const barWidthPercent = (barData.total_value / maxValue) * 100;
-        // Position label relative to the end of the calculated bar width
-        leaderLabelElement.style.left = `calc(${barWidthPercent}% + 5px)`; // Position just right of the bar end
+        barContainer.style.minHeight = `${totalBarContainerHeight}px`; // Ensure container has enough height
 
 
-        // Add annotations (dimension lines/labels)
+        // --- Create SVG for Annotations ---
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute('class', 'annotation-svg');
+        svg.setAttribute('height', svgAnnotationHeight); // Set fixed height
+        svg.setAttribute('viewBox', `0 0 ${maxValue} ${svgAnnotationHeight}`);
+        svg.setAttribute('preserveAspectRatio', 'none');
+
+        // --- Draw Annotations in SVG ---
         if (barData.annotations) {
             barData.annotations.forEach(anno => {
-                const startPercent = (anno.start_value / maxValue) * 100;
-                const endPercent = (anno.end_value / maxValue) * 100;
-                const widthPercent = endPercent - startPercent;
-                const midPercent = startPercent + widthPercent / 2;
-                const levelClass = `level-${anno.level || 1}`; // Default to level 1
+                const startX = anno.start_value;
+                const endX = anno.end_value;
+                const midX = startX + (endX - startX) / 2;
+                const level = anno.level || 1;
+
+                // Y positions within SVG (0=top)
+                const lineY = (level === 1) ? 35 : 15; // Level 1 lower, Level 2 higher
+                const textY = lineY - 2; // Position text baseline slightly ABOVE the line
+                const tickStartY = lineY;
+                const tickEndY = lineY + 4; // Tick length (downwards)
 
                 // Horizontal Line
-                const line = document.createElement('div');
-                line.className = `annotation-line ${levelClass}`;
-                line.style.left = `${startPercent}%`;
-                line.style.width = `${widthPercent}%`;
-                barContainer.appendChild(line);
+                const hLine = document.createElementNS(svgNS, "line");
+                hLine.setAttribute('x1', startX);
+                hLine.setAttribute('y1', lineY);
+                hLine.setAttribute('x2', endX);
+                hLine.setAttribute('y2', lineY);
+                // No specific class needed if styling all lines the same
+                svg.appendChild(hLine);
 
                 // Start Tick
-                const tickStart = document.createElement('div');
-                tickStart.className = `annotation-tick ${levelClass}`;
-                tickStart.style.left = `${startPercent}%`;
-                barContainer.appendChild(tickStart);
+                const tickStart = document.createElementNS(svgNS, "line");
+                tickStart.setAttribute('x1', startX);
+                tickStart.setAttribute('y1', tickStartY);
+                tickStart.setAttribute('x2', startX);
+                tickStart.setAttribute('y2', tickEndY);
+                svg.appendChild(tickStart);
 
                 // End Tick
-                const tickEnd = document.createElement('div');
-                tickEnd.className = `annotation-tick ${levelClass}`;
-                tickEnd.style.left = `${endPercent}%`;
-                barContainer.appendChild(tickEnd);
+                const tickEnd = document.createElementNS(svgNS, "line");
+                tickEnd.setAttribute('x1', endX);
+                tickEnd.setAttribute('y1', tickStartY);
+                tickEnd.setAttribute('x2', endX);
+                tickEnd.setAttribute('y2', tickEndY);
+                svg.appendChild(tickEnd);
 
-                // Label
-                const label = document.createElement('div');
-                label.className = `annotation-label ${levelClass}`;
-                label.style.left = `${midPercent}%`;
+                // Label Text
+                const label = document.createElementNS(svgNS, "text");
+                label.setAttribute('x', midX);
+                label.setAttribute('y', textY); // Use adjusted Y
+                // No specific class needed if styling all text the same
                 label.textContent = anno.label;
-                barContainer.appendChild(label);
+                svg.appendChild(label);
             });
         }
 
+        // --- Create the Bar Element ---
+        const barElement = document.createElement('div');
+        barElement.className = 'bar';
+        barElement.style.height = `${barHeight}px`;
+        barElement.style.top = `${barMarginTop}px`; // Position below SVG using 'top'
 
-        // Add equation below the bar if available
+        // Add segments (Logic remains similar)
+        barData.segments.forEach(segment => {
+            const segmentElement = document.createElement('div');
+            segmentElement.className = 'bar-segment';
+            const segmentWidthPercent = (segment.value / maxValue) * 100;
+            segmentElement.style.width = `max(0%, ${segmentWidthPercent}%)`;
+            segmentElement.style.backgroundColor = segment.color || '#cccccc';
+            if (segment.hatch) {
+                const hatchClass = segment.hatch_pattern === "xxx" ? 'hatch-pattern-cross' : 'hatch-pattern-forward-slash';
+                segmentElement.classList.add(hatchClass);
+                if (segment.color === 'transparent') {
+                    segmentElement.style.backgroundColor = 'transparent';
+                }
+            }
+            barElement.appendChild(segmentElement);
+        });
+
+
+        // --- Create Leader Label ---
+        const leaderLabelElement = document.createElement('span');
+        leaderLabelElement.className = 'bar-leader-label';
+        leaderLabelElement.textContent = `${barData.name}: ${barData.total_value.toFixed(1)}`;
+        leaderLabelElement.style.top = `${barMarginTop}px`; // Align top with bar's top
+        leaderLabelElement.style.transform = `translateY(${barHeight / 2}px)`; // Center vertically on bar
+        const barWidthPercent = (barData.total_value / maxValue) * 100;
+        // Ensure label doesn't overlap bar if bar is very wide
+        leaderLabelElement.style.left = `calc(min(100%, ${barWidthPercent}%) + 5px)`;
+
+
+        // --- Create Equation Text ---
         let equationElement = null;
         if (barData.equation) {
             equationElement = document.createElement('div');
             equationElement.className = 'equation-text';
+            // CSS handles positioning (absolute bottom)
             equationElement.textContent = barData.equation;
         }
 
-        // Assemble the container
+
+        // --- Assemble the container ---
+        barContainer.appendChild(svg);
         barContainer.appendChild(barElement);
         barContainer.appendChild(leaderLabelElement);
         if (equationElement) {
@@ -307,7 +323,7 @@ function renderVisualization(vizData) {
         visualizationArea.appendChild(barContainer);
     });
 
-    console.log("Detailed rendering complete.");
+    console.log("SVG rendering update complete.");
 }
 
 function showError(message) {
